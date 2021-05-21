@@ -7,7 +7,21 @@ let sheet = null;
 let lastNote = null;
 
 function play() {
-	sheet = document.querySelector('#sheet').value.split(' ');
+	let text = "";
+	document.querySelector('#sheet').value.split('\n').forEach((line)=>{
+		if (text.length) {
+			text += ' ';
+		}
+		text += line;
+	});
+
+	sheet = [];
+	text.split(' ').forEach((tone)=>{
+		const repetition = tone.charAt(2);
+		for (let i = 0; i < repetition; i++) {
+			sheet.push(tone.substring(0, 2));
+		}
+	});
 	stopMetronome();
 	startMetronome(onTick);
 }
@@ -22,7 +36,7 @@ function onTick(timestamp) {
 	if (!sheet)
 		return;
 
-	let noteIndex = Math.floor(timestamp / 250);
+	let noteIndex = Math.floor(timestamp / 120);
 
 	if (lastNote && lastNote == noteIndex)
 		return;
@@ -33,13 +47,18 @@ function onTick(timestamp) {
 		return;
 	}
 
+	let new_octave = +sheet[noteIndex].charAt(0);
+	let new_note =  sheet[noteIndex].charAt(1);
 	if (noteIndex > 0) {
 		let octave = sheet[noteIndex - 1].charAt(0);
 		let note = sheet[noteIndex - 1].charAt(1);
+		if (new_octave == octave && new_note == note)
+			return;
+
 		Orgel.stopTone(+octave, note);
 	}
 
-	Orgel.playTone(+sheet[noteIndex].charAt(0), sheet[noteIndex].charAt(1));
+	Orgel.playTone(new_octave, new_note);
 }
 
 Orgel.setup();

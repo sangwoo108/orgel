@@ -140,7 +140,6 @@ function playTone(octave, note) {
 
 function stopTone(octave, note) {
   if (!oscList[octave] || !oscList[octave][note]) {
-    console.log (octave + " " + note);
     return;
   }
 
