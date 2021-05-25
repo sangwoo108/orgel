@@ -3,24 +3,35 @@
 import * as Orgel from "./orgel.js"
 import { start as startMetronome, stop as stopMetronome } from "./metronome.js"
 
-let sheet = null;
-let lastNote = null;
+// Kind of sparse matrix stored based on 'startAt'.
+// i.e. there's empty index.
+let sheet = {};
+
+// Kind of sparse matrix stored based on 'endAt'
+let playingTones = {};
+
+let lastIndex = null;
 
 function play() {
 	let text = "";
 	document.querySelector('#sheet').value.split('\n').forEach((line)=>{
 		if (text.length) {
 			text += ' ';
-		}
-		text += line;
+		} text += line;
 	});
+	text = text.trim();
 
-	sheet = [];
-	text.split(' ').forEach((tone)=>{
-		const repetition = tone.charAt(2);
-		for (let i = 0; i < repetition; i++) {
-			sheet.push(tone.substring(0, 2));
+	sheet = {};
+	text.split(' ').forEach((data)=>{
+		let octave, note, startAt, duration;
+		[octave, note, startAt, duration] = data.split(',');
+		if (!sheet[startAt]) {
+			sheet[startAt] = [];
 		}
+
+		sheet[startAt].push(new Orgel.Tone(+octave, note, +startAt, +duration))
+		if (!octave)
+			debugger;
 	});
 	stopMetronome();
 	startMetronome(onTick);
@@ -29,36 +40,44 @@ function play() {
 function stop() {
 	stopMetronome();
 	Orgel.stopAllTones();
-	lastNote = null;
 }
 
 function onTick(timestamp) {
 	if (!sheet)
 		return;
 
-	let noteIndex = Math.floor(timestamp / 120);
-
-	if (lastNote && lastNote == noteIndex)
+	let toneIndex = Math.floor(timestamp / 120);
+	if (toneIndex === lastIndex)
 		return;
 
-	lastNote = noteIndex;
-	if (noteIndex >= sheet.length) {
-		stop();
-		return;
+	if (lastIndex) {
+		let tonesToStop = [];
+	 	for (let endAt in playingTones) {
+			if (+endAt <= toneIndex) {
+				tonesToStop.push(endAt);
+			}
+		}
+
+		tonesToStop.forEach((endAt) => {
+			playingTones[endAt].forEach(tone => Orgel.stopTone(tone));
+			delete playingTones[endAt];
+		})
 	}
 
-	let new_octave = +sheet[noteIndex].charAt(0);
-	let new_note =  sheet[noteIndex].charAt(1);
-	if (noteIndex > 0) {
-		let octave = sheet[noteIndex - 1].charAt(0);
-		let note = sheet[noteIndex - 1].charAt(1);
-		if (new_octave == octave && new_note == note)
-			return;
+	lastIndex = toneIndex;
 
-		Orgel.stopTone(+octave, note);
+	if (sheet[toneIndex]) {
+		sheet[toneIndex].forEach(tone => {
+			console.log(tone.octave, tone.note);
+			Orgel.playTone(tone)
+			const endAt = tone.startAt + tone.duration;
+			if (!playingTones[endAt]) {
+				playingTones[endAt] = [];
+			}
+
+			playingTones[endAt].push(tone);
+		});
 	}
-
-	Orgel.playTone(new_octave, new_note);
 }
 
 Orgel.setup();

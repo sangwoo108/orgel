@@ -2,7 +2,16 @@
 
 "use strict"
 
-export { setup, playTone, stopTone, stopAllTones};
+export { setup, playTone, stopTone, stopAllTones, Tone };
+
+class Tone {
+  constructor(octave, note, startAt, duration) {
+    this.octave = octave;
+    this.note = note;
+    this.startAt = startAt;
+    this.duration = duration;
+  }
+}
 
 let audioContext = new (window.AudioContext || window.webkitAudioContext)();
 let oscList = [];
@@ -125,26 +134,27 @@ function setup() {
       oscList[i] = {};
 }
 
-function playTone(octave, note) {
-  if (oscList[octave] && oscList[octave][note])
+function playTone(tone) {
+  if (oscList[tone.octave] && oscList[tone.octave][tone.note])
     return;
 
   let osc = audioContext.createOscillator();
   osc.connect(mainGainNode);
   osc.type = "sine";  // sine, square, triangle, and sawtooth
-  osc.frequency.value = noteFrequencies[octave][note];
+  osc.frequency.value = noteFrequencies[tone.octave][tone.note];
   osc.start();
 
-  oscList[octave][note] = osc;
+  oscList[tone.octave][tone.note] = osc;
 }
 
-function stopTone(octave, note) {
-  if (!oscList[octave] || !oscList[octave][note]) {
+function stopTone(tone) {
+  if (!oscList[tone.octave] || !oscList[tone.octave][tone.note]) {
+    console.error(tone.octave + ' ' + tone.note + ` doesn't exist`);
     return;
   }
 
-  oscList[octave][note].stop();
-  delete oscList[octave][note];
+  oscList[tone.octave][tone.note].stop();
+  delete oscList[tone.octave][tone.note];
 }
 
 function stopAllTones() {
