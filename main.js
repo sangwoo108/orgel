@@ -15,8 +15,10 @@ function playTrack(sheet) {
 	text.split(' ').forEach((data)=>{
 		let octave, note, startAt, duration;
 		[octave, note, startAt, duration] = data.split(',');
-		if (!octave)
+		if (!octave) {
 			debugger;
+			return;
+		}
 
 		tones.push(new Orgel.Tone(+octave, note, +startAt, +duration));
 	});
