@@ -2,7 +2,7 @@
 
 "use strict"
 
-export { setup, playTone, Tone };
+export { setup, playTones, Tone };
 
 class Tone {
   constructor(octave, note, startAt, duration) {
@@ -13,7 +13,6 @@ class Tone {
   }
 }
 
-let audioContext = new (window.AudioContext || window.webkitAudioContext)();
 let noteFrequencies = null;
 
 function createNoteTable() {
@@ -125,20 +124,23 @@ function setup() {
   noteFrequencies = createNoteTable();
 }
 
-function playTone(tone) {
-  let osc = audioContext.createOscillator();
-  let gainNode = audioContext.createGain();
-  gainNode.connect(audioContext.destination);
-  gainNode.gain.value = 1;
+function playTones(tones) {
+  let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  tones.forEach(tone => {
+    let osc = audioContext.createOscillator();
+    let gainNode = audioContext.createGain();
+    gainNode.connect(audioContext.destination);
+    gainNode.gain.value = 1;
 
-  osc.connect(gainNode);
-  osc.type = "sine";  // sine, square, triangle, and sawtooth
-  osc.frequency.value = noteFrequencies[tone.octave][tone.note];
+    osc.connect(gainNode);
+    osc.type = "sine";  // sine, square, triangle, and sawtooth
+    osc.frequency.value = noteFrequencies[tone.octave][tone.note];
 
-  const startTime = audioContext.currentTime + tone.startAt / 8;
-  const endTime = audioContext.currentTime + tone.startAt / 8 + tone.duration / 8;
-  osc.start(startTime);
-  osc.stop(endTime);
-  gainNode.gain.linearRampToValueAtTime(1, endTime - 0.2);
-  gainNode.gain.linearRampToValueAtTime(0, endTime);
+    const startTime = audioContext.currentTime + tone.startAt / 8;
+    const endTime = audioContext.currentTime + tone.startAt / 8 + tone.duration / 8;
+    osc.start(startTime);
+    osc.stop(endTime);
+    gainNode.gain.linearRampToValueAtTime(1, endTime - 0.2);
+    gainNode.gain.linearRampToValueAtTime(0, endTime);
+  });
 }

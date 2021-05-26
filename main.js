@@ -2,23 +2,30 @@
 
 import * as Orgel from "./orgel.js"
 
-function play() {
+function playTrack(sheet) {
 	let text = "";
-	document.querySelector('#sheet').value.split('\n').forEach((line)=>{
+	sheet.split('\n').forEach((line)=>{
 		if (text.length) {
 			text += ' ';
 		} text += line;
 	});
 	text = text.trim();
 
+	let tones = []
 	text.split(' ').forEach((data)=>{
 		let octave, note, startAt, duration;
 		[octave, note, startAt, duration] = data.split(',');
 		if (!octave)
 			debugger;
 
-		Orgel.playTone(new Orgel.Tone(+octave, note, +startAt, +duration));
+		tones.push(new Orgel.Tone(+octave, note, +startAt, +duration));
 	});
+	Orgel.playTones(tones);
+}
+
+function play() {
+	playTrack(document.querySelector('#track1').value);
+	playTrack(document.querySelector('#track2').value);
 }
 
 Orgel.setup();
