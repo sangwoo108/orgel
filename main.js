@@ -24,10 +24,16 @@ function playTrack(sheet) {
 }
 
 function play() {
+	stop();
 	playTrack(document.querySelector('#track1').value);
 	playTrack(document.querySelector('#track2').value);
+}
+
+function stop() {
+	Orgel.stop();
 }
 
 Orgel.setup();
 
 document.querySelector("#play").onclick = play;
+document.querySelector("#stop").onclick = stop;

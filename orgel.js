@@ -2,7 +2,7 @@
 
 "use strict"
 
-export { setup, playTones, Tone };
+export { setup, playTones, stop, Tone };
 
 class Tone {
   constructor(octave, note, startAt, duration) {
@@ -13,6 +13,7 @@ class Tone {
   }
 }
 
+let contexts = [];
 let noteFrequencies = null;
 
 function createNoteTable() {
@@ -126,6 +127,7 @@ function setup() {
 
 function playTones(tones) {
   let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  contexts.push(audioContext);
   tones.forEach(tone => {
     let osc = audioContext.createOscillator();
     let gainNode = audioContext.createGain();
@@ -143,4 +145,10 @@ function playTones(tones) {
     gainNode.gain.linearRampToValueAtTime(1, endTime - 0.2);
     gainNode.gain.linearRampToValueAtTime(0, endTime);
   });
+}
+
+
+function stop() {
+  contexts.forEach(context => context.close())
+  contexts = [];
 }
