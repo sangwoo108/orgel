@@ -2,7 +2,7 @@
 
 "use strict"
 
-export { setup, playTone, stopTone, stopAllTones, Tone };
+export { setup, playTone, Tone };
 
 class Tone {
   constructor(octave, note, startAt, duration) {
@@ -14,8 +14,6 @@ class Tone {
 }
 
 let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-let oscList = [];
-let mainGainNode = null;
 let noteFrequencies = null;
 
 function createNoteTable() {
@@ -125,45 +123,22 @@ function createNoteTable() {
 
 function setup() {
   noteFrequencies = createNoteTable();
-
-  mainGainNode = audioContext.createGain();
-  mainGainNode.connect(audioContext.destination);
-  mainGainNode.gain.value = 1;
-
-  for (let i = 0; i < noteFrequencies.length; i++)
-      oscList[i] = {};
 }
 
 function playTone(tone) {
-  if (oscList[tone.octave] && oscList[tone.octave][tone.note])
-    return;
-
   let osc = audioContext.createOscillator();
-  osc.connect(mainGainNode);
+  let gainNode = audioContext.createGain();
+  gainNode.connect(audioContext.destination);
+  gainNode.gain.value = 1;
+
+  osc.connect(gainNode);
   osc.type = "sine";  // sine, square, triangle, and sawtooth
   osc.frequency.value = noteFrequencies[tone.octave][tone.note];
-  osc.start();
 
-  oscList[tone.octave][tone.note] = osc;
-}
-
-function stopTone(tone) {
-  if (!oscList[tone.octave] || !oscList[tone.octave][tone.note]) {
-    console.error(tone.octave + ' ' + tone.note + ` doesn't exist`);
-    return;
-  }
-
-  oscList[tone.octave][tone.note].stop();
-  delete oscList[tone.octave][tone.note];
-}
-
-function stopAllTones() {
-  oscList.forEach(oscs => { 
-    for (const note in oscs) {
-      oscs[note].stop();
-    }
-  });
-
-  for (let i = 0; i < noteFrequencies.length; i++)
-      oscList[i] = {};
+  const startTime = audioContext.currentTime + tone.startAt / 8;
+  const endTime = audioContext.currentTime + tone.startAt / 8 + tone.duration / 8;
+  osc.start(startTime);
+  osc.stop(endTime);
+  gainNode.gain.linearRampToValueAtTime(1, endTime - 0.2);
+  gainNode.gain.linearRampToValueAtTime(0, endTime);
 }
